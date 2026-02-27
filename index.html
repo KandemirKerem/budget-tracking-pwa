@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bütçe Takip Erasmus</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+</head>
+
+<body>
+    <header class="app-header">
+        <h1>Bütçe Takip</h1>
+        <div class="view-toggle">
+            <button class="toggle-btn active" id="btn-today">Bugün</button>
+            <button class="toggle-btn" id="btn-calendar">Takvim</button>
+        </div>
+    </header>
+
+    <!-- Today View -->
+    <main id="view-today" class="view-section active">
+        <section class="summary-cards">
+            <div class="card limit-card" id="limit-card">
+                <h3>Günlük Limit</h3>
+                <p class="amount" id="daily-limit-display">0 zł</p>
+                <span class="hint">Değiştirmek için dokun</span>
+            </div>
+            <div class="card expense-card">
+                <h3>Bugün Harcanan</h3>
+                <p class="amount" id="today-total-display">0 zł</p>
+                <div class="status-bar" id="status-bar"></div>
+            </div>
+        </section>
+
+        <section class="expense-list-section">
+            <h3>Bugünkü Harcamalar</h3>
+            <div class="expense-list" id="expense-list">
+                <!-- Expenses will be generated here -->
+                <p class="empty-state">Henüz harcama eklenmedi.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Calendar View -->
+    <main id="view-calendar" class="view-section">
+        <div class="monthly-summary">
+            <div class="summary-item">
+                <span>Aylık Limit:</span>
+                <strong id="monthly-limit-display">0 zł</strong>
+            </div>
+            <div class="summary-item">
+                <span>Kalan:</span>
+                <strong id="monthly-remaining-display">0 zł</strong>
+            </div>
+        </div>
+        <div class="calendar-header">
+            <button id="prev-month">&lt;</button>
+            <h2 class="current-month" id="current-month-display">Ekim 2023</h2>
+            <button id="next-month">&gt;</button>
+        </div>
+        <div class="calendar-grid-header">
+            <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
+        </div>
+        <div class="calendar-grid" id="calendar-grid">
+            <!-- Calendar days generated here -->
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="fab" id="fab-add" aria-label="Harcama Ekle">
+        <svg fill="currentColor" viewBox="0 0 24 24" width="28" height="28">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+    </button>
+
+    <!-- Modals -->
+    <!-- Add Expense Modal -->
+    <div class="modal-overlay" id="modal-expense">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Harcama Ekle</h2>
+                <button class="close-modal" data-modal="modal-expense">&times;</button>
+            </div>
+            <form id="form-expense">
+                <div class="form-group">
+                    <label>Tutar (zł)</label>
+                    <input type="number" id="expense-amount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Açıklama</label>
+                    <input type="text" id="expense-desc" placeholder="Örn: Market alışverişi" required>
+                    <div class="suggestion-tags" id="suggestion-tags">
+                        <span class="tag">Yemek</span>
+                        <span class="tag">Kira</span>
+                        <span class="tag">Market</span>
+                        <span class="tag">Eğlence</span>
+                        <span class="tag">Ulaşım</span>
+                        <span class="tag">Fatura</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Set Limit Modal -->
+    <div class="modal-overlay" id="modal-limit">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Günlük Limit Belirle</h2>
+                <button class="close-modal" data-modal="modal-limit">&times;</button>
+            </div>
+            <form id="form-limit">
+                <div class="form-group">
+                    <label>Yeni Limit (zł)</label>
+                    <input type="number" id="limit-amount" placeholder="500" step="1" required>
+                </div>
+                <button type="submit" class="btn-primary">Güncelle</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Day Info Modal -->
+    <div class="modal-overlay" id="modal-day-info">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="day-info-title">Detay</h2>
+                <button class="close-modal" data-modal="modal-day-info">&times;</button>
+            </div>
+            <div class="day-info-content">
+                <p>Harcanan: <strong id="day-spent">0 zł</strong></p>
+                <p>Limit: <strong id="day-limit">0 zł</strong></p>
+                <p>Kalan: <strong id="day-remaining">0 zł</strong></p>
+                <div class="exceed-box" id="day-exceed-box">
+                    Aşılan Miktar: <strong id="day-exceeded">0 zł</strong>
+                </div>
+                <h3 style="margin-top:1.5rem;font-size:1.1rem;margin-bottom:1rem;">Harcamalar</h3>
+                <div class="expense-list" id="day-expense-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal-overlay" id="modal-confirm-delete">
+        <div class="modal" style="text-align: center; padding-top: 2rem; padding-bottom: 2rem;">
+            <div style="color: var(--danger); margin-bottom: 1rem;">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" style="display:inline-block;">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+            </div>
+            <h2 style="margin-bottom: 0.5rem;">Emin misiniz?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Bu harcamayı silmek istediğinize emin misiniz?
+                Bu işlem geri alınamaz.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-secondary close-modal" data-modal="modal-confirm-delete"
+                    style="flex: 1;">İptal</button>
+                <button class="btn-danger" id="btn-confirm-delete" style="flex: 1;">Evet, Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
